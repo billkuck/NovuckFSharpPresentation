@@ -93,29 +93,32 @@
     IsEligible: bool
     IsRegistered: bool
   }
-  
-  let calculateTotal customer spend =
-    let discount = 
-      if customer.IsEligible && spend >= 100.0M 
-      then (spend * 0.1M) else 0.0M   
-    spend - discount
   ```
-- **Right (C#)**: Show C# consuming this:
+- **Right (C#)**: Show C# business logic with if statements:
   ```csharp
-  var customer = new Customer(
-    Id: "John",
-    IsEligible: true,
-    IsRegistered: true
-  );
+  // C# business logic
+  static decimal CalculateTotal(Customer customer, decimal spend)
+  {
+      var discount = (customer.IsEligible && customer.IsRegistered && spend >= 100.0m)
+          ? spend * 0.1m
+          : 0.0m;
+      return spend - discount;
+  }
   
-  var total = CustomerModule.calculateTotal(customer, 100.0m);
+  var customer = new Customer {
+    Id = "John",
+    IsEligible = true,
+    IsRegistered = true
+  };
+  
+  var total = CalculateTotal(customer, 100.0m);
   
   // But nothing stops this illegal state:
-  var badCustomer = new Customer(
-    Id: "Bad",
-    IsEligible: true,    // Eligible...
-    IsRegistered: false  // ...but NOT registered! ❌
-  );
+  var badCustomer = new Customer {
+    Id = "Bad",
+    IsEligible = true,    // Eligible...
+    IsRegistered = false  // ...but NOT registered! ❌
+  };
   ```
 - "Nothing stops us from creating this illegal state in either language!"
 - "Yes, and we can do better..."
@@ -137,36 +140,40 @@
   type Customer =
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer
-  
-  let calculateTotal customer spend =
-    let discount = 
-      match customer with
-      | Registered c when c.IsEligible && spend >= 100.0M -> 
-          spend * 0.1M
-      | _ -> 0.0M
-    spend - discount
   ```
-- **Right (C#)**: Show how C# code must change:
+- **Right (C#)**: Show C# switch expression over F# DU:
   ```csharp
+  // C# business logic using switch expression over F# DU
+  static decimal CalculateTotal(Customer customer, decimal spend)
+  {
+      var discount = customer switch
+      {
+          Registered c when c.Item.IsEligible && spend >= 100.0m => spend * 0.1m,
+          _ => 0.0m
+      };
+      return spend - discount;
+  }
+  
   // Now we have to pick a case - can't be both!
   var john = Customer.NewRegistered(
-    new RegisteredCustomer("John", IsEligible: true)
+    new RegisteredCustomer { Id = "John", IsEligible = true }
   );
   
   var sarah = Customer.NewGuest(
-    new UnregisteredCustomer("Sarah")
+    new UnregisteredCustomer { Id = "Sarah" }
   );
   
-  var johnTotal = CustomerModule.calculateTotal(john, 100.0m);
+  var johnTotal = CalculateTotal(john, 100.0m);
   // johnTotal = 90.0m
   
   // Can't create an eligible guest anymore - 
   // UnregisteredCustomer doesn't have IsEligible!
   // var bad = Customer.NewGuest(
-  //   new UnregisteredCustomer("Bad", IsEligible: true)  // ❌ Doesn't compile!
+  //   new UnregisteredCustomer { Id = "Bad", IsEligible = true }  // ❌ Doesn't compile!
   // );
   ```
 - "Now you literally cannot create an Eligible Guest - in F# OR C#!"
+- "Notice: C# switch expression works perfectly with F# discriminated union!"
 
 **Minutes 18-21: Iteration 2 - Make Eligibility Explicit**
 - Partner A: "But IsEligible is still just a boolean flag..."
@@ -185,16 +192,20 @@
     | Eligible of RegisteredCustomer
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer
-  
-  let calculateTotal customer spend =
-    let discount = 
-      match customer with
-      | Eligible _ when spend >= 100.0M -> spend * 0.1M
-      | _ -> 0.0M
-    spend - discount
   ```
 - **Right (C#)**: Show how the C# code becomes even clearer:
   ```csharp
+  // C# business logic - simpler switch expression!
+  static decimal CalculateTotal(Customer customer, decimal spend)
+  {
+      var discount = customer switch
+      {
+          Customer.Eligible _ when spend >= 100.0m => spend * 0.1m,
+          _ => 0.0m
+      };
+      return spend - discount;
+  }
+  
   // The type TELLS you what kind of customer this is
   var john = Customer.NewEligible(
     new RegisteredCustomer("John")
@@ -213,43 +224,52 @@
   );
   
   // Logic in C# is now simpler too
-  var johnTotal = CustomerModule.calculateTotal(john, 100.0m);
+  var johnTotal = CalculateTotal(john, 100.0m);
   // 90.0m - gets discount
   
-  var richardTotal = CustomerModule.calculateTotal(richard, 100.0m);
+  var richardTotal = CalculateTotal(richard, 100.0m);
   // 100.0m - no discount (not eligible)
   ```
 - Show the benefits:
   - No more boolean flag to check or forget
   - Domain language is explicit: "Eligible", "Registered", "Guest"
   - Impossible states are... impossible!
+  - C# switch expression is cleaner - only checks for Eligible!
 
 **Minutes 21-25: Test All Cases Side-by-Side**
-- **Left (F#)**: Show how we verify in F# Interactive:
+- **Left (F#)**: Show the types on display:
   ```fsharp
-  let john = Eligible { Id = "John" }
-  let mary = Eligible { Id = "Mary" }
-  let richard = Registered { Id = "Richard" }
-  let sarah = Guest { Id = "Sarah" }
+  type RegisteredCustomer = { Id: string }
+  type UnregisteredCustomer = { Id: string }
   
-  let assertJohn = calculateTotal john 100.0M = 90.0M      // true
-  let assertMary = calculateTotal mary 99.0M = 99.0M       // true
-  let assertRichard = calculateTotal richard 100.0M = 100.0M // true
-  let assertSarah = calculateTotal sarah 100.0M = 100.0M    // true
+  type Customer =
+    | Eligible of RegisteredCustomer
+    | Registered of RegisteredCustomer
+    | Guest of UnregisteredCustomer
   ```
-- **Right (C#)**: Show the same tests in C#:
+- **Right (C#)**: Show the tests running:
   ```csharp
+  static decimal CalculateTotal(Customer customer, decimal spend)
+  {
+      var discount = customer switch
+      {
+          Customer.Eligible _ when spend >= 100.0m => spend * 0.1m,
+          _ => 0.0m
+      };
+      return spend - discount;
+  }
+  
   var john = Customer.NewEligible(new RegisteredCustomer("John"));
   var mary = Customer.NewEligible(new RegisteredCustomer("Mary"));
   var richard = Customer.NewRegistered(new RegisteredCustomer("Richard"));
   var sarah = Customer.NewGuest(new UnregisteredCustomer("Sarah"));
   
-  Assert.Equal(90.0m, CustomerModule.calculateTotal(john, 100.0m));
-  Assert.Equal(99.0m, CustomerModule.calculateTotal(mary, 99.0m));
-  Assert.Equal(100.0m, CustomerModule.calculateTotal(richard, 100.0m));
-  Assert.Equal(100.0m, CustomerModule.calculateTotal(sarah, 100.0m));
+  Console.WriteLine($"John: £{CalculateTotal(john, 100.0m)}");    // £90.00
+  Console.WriteLine($"Mary: £{CalculateTotal(mary, 99.0m)}");     // £99.00
+  Console.WriteLine($"Richard: £{CalculateTotal(richard, 100.0m)}"); // £100.00
+  Console.WriteLine($"Sarah: £{CalculateTotal(sarah, 100.0m)}");  // £100.00
   ```
-- "Same business logic, same safety, your choice of language!"
+- "F# provides the type safety, C# gets the benefits - best of both worlds!"
 
 **Minutes 25-28: Benefits Discussion**
 - Quickly enumerate what we've achieved:
@@ -270,21 +290,33 @@
     | Guest of UnregisteredCustomer
     | VIP of RegisteredCustomer  // NEW!
   ```
-- Show the red squiggly in F# `calculateTotal` - incomplete pattern match!
-- **Right (C#)**: Show red squiggly in C# switch expression too!
+- **Right (C#)**: Show the compiler warning in CalculateTotal!
   ```csharp
-  var message = customer switch {
-    Customer.Eligible c => $"Eligible: {c.Item.Id}",
-    Customer.Registered c => $"Regular: {c.Item.Id}",
-    Customer.Guest c => $"Guest: {c.Item.Id}",
-    // ❌ Warning: Customer.VIP not handled!
+  static decimal CalculateTotal(Customer customer, decimal spend)
+  {
+      var discount = customer switch
+      {
+          Customer.Eligible _ when spend >= 100.0m => spend * 0.1m,
+          _ => 0.0m
+          // ⚠️ Warning: VIP case will fall through to default!
+      };
+      return spend - discount;
+  }
+  
+  // Also show any other switch expressions that need updating:
+  string GetCustomerType(Customer customer) => customer switch
+  {
+      Customer.Eligible c => $"Eligible: {c.Item.Id}",
+      Customer.Registered c => $"Regular: {c.Item.Id}",
+      Customer.Guest c => $"Guest: {c.Item.Id}",
+      // ❌ Warning: Customer.VIP not handled!
   };
   ```
-- Fix both:
-  - **Left (F#)**: Add `| VIP _ when spend >= 100.0M -> spend * 0.15M`
-  - **Right (C#)**: Add `Customer.VIP c => $"VIP: {c.Item.Id}",`
-- "The compiler guided us to update all the places in both languages!"
-- "This is what we mean by refactoring safety"
+- Fix the C# code:
+  - Update CalculateTotal: `Customer.VIP _ when spend >= 100.0m => spend * 0.15m,`
+  - Update GetCustomerType: `Customer.VIP c => $"VIP: {c.Item.Id}",`
+- "The F# change forced C# to update - the compiler guided us!"
+- "This is what we mean by refactoring safety across languages"
 
 ---
 
@@ -295,7 +327,7 @@
 - "This is for teams thinking: 'Can we actually use this in our C# projects?'"
 
 **Minutes 33-35: C# Consuming F# Types - The Basics**
-- **Left (F#)**: Final model on display
+- **Left (F#)**: Final model on display - JUST types, no logic
   ```fsharp
   type RegisteredCustomer = { Id: string }
   type UnregisteredCustomer = { Id: string }
@@ -304,54 +336,62 @@
     | Eligible of RegisteredCustomer
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer
-  
-  let calculateTotal customer spend =
-    let discount = 
-      match customer with
-      | Eligible _ when spend >= 100.0M -> spend * 0.1M
-      | _ -> 0.0M
-    spend - discount
   ```
-- **Right (C#)**: Show project reference and usage
+- **Right (C#)**: Show project reference, usage, AND business logic
   ```csharp
   // Add project reference to F# class library
   using CustomerDomain;
   using static CustomerDomain.Customer;
   
+  // C# implements the business logic using switch expressions
+  static decimal CalculateTotal(Customer customer, decimal spend)
+  {
+      var discount = customer switch
+      {
+          Customer.Eligible _ when spend >= 100.0m => spend * 0.1m,
+          _ => 0.0m
+      };
+      return spend - discount;
+  }
+  
   // Creating customers - constructors are generated automatically
   var john = NewEligible(new RegisteredCustomer("John"));
   var sarah = NewGuest(new UnregisteredCustomer("Sarah"));
   
-  // Calling F# functions - just works!
-  var total = CustomerModule.calculateTotal(john, 100.0m);
+  var total = CalculateTotal(john, 100.0m);  // £90.00
   ```
+- "F# defines the types, C# implements the logic - perfect interop!"
 
 **Minutes 35-37: Pattern Matching in C#**
-- **Right (C#)**: Show C# switch expressions (C# 8.0+)
+- **Right (C#)**: Show more C# switch expressions (C# 8.0+)
   ```csharp
-  // Pattern matching over F# discriminated unions
+  // Pattern matching over F# discriminated unions - example 1
   string GetCustomerType(Customer customer) => customer switch
   {
-    Eligible c => $"VIP Customer: {c.Item.Id}",
-    Registered c => $"Regular Customer: {c.Item.Id}",
-    Guest c => $"Guest: {c.Item.Id}",
+    Customer.Eligible c => $"VIP Customer: {c.Item.Id}",
+    Customer.Registered c => $"Regular Customer: {c.Item.Id}",
+    Customer.Guest c => $"Guest: {c.Item.Id}",
     _ => throw new ArgumentException("Unknown customer type")
   };
   
-  // Or access the properties directly
+  // Example 2: Composing business rules
   decimal CalculateWithBonus(Customer customer, decimal spend)
   {
-    var baseTotal = CustomerModule.calculateTotal(customer, spend);
+    var baseTotal = CalculateTotal(customer, spend);
     
     return customer switch
     {
-      Eligible c => baseTotal * 0.95m,  // Extra 5% off for eligible
+      Customer.Eligible c => baseTotal * 0.95m,  // Extra 5% off for eligible
       _ => baseTotal
     };
   }
+  
+  Console.WriteLine(GetCustomerType(john));  // "VIP Customer: John"
+  Console.WriteLine($"With bonus: £{CalculateWithBonus(john, 100.0m)}");  // £85.50
   ```
-- "C# 8.0+ switch expressions work great with F# DUs"
+- "C# 8.0+ switch expressions work perfectly with F# DUs"
 - "The compiler warns you if you miss a case!"
+- "All the business logic is C# - F# just provides type safety"
 
 **Minutes 37-40: Making It Feel More C#-Like (Optional Wrappers)**
 - **Right (C#)**: Show how to create C#-friendly wrappers if desired
@@ -368,8 +408,15 @@
     public static Customer CreateGuest(string id) =>
       Customer.NewGuest(new UnregisteredCustomer(id));
     
-    public static decimal CalculateTotal(Customer customer, decimal spend) =>
-      CustomerModule.calculateTotal(customer, spend);
+    public static decimal CalculateTotal(Customer customer, decimal spend)
+    {
+      var discount = customer switch
+      {
+        Customer.Eligible _ when spend >= 100.0m => spend * 0.1m,
+        _ => 0.0m
+      };
+      return spend - discount;
+    }
     
     // Can also add C#-style extension methods
     public static bool IsEligible(this Customer customer) =>
