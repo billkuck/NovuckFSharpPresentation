@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <DefineConstants>FABLE_COMPILER</DefineConstants>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="UiWidgets\AdtStyles.fs" />
+        <Compile Include="UiWidgets\AdtWidgets.fs" />
+        <Compile Include="Clock\Clock_Model.fs" />
+        <Compile Include="Clock\Clock_Behavior.fs" />
+        <Compile Include="Clock\Clock_View.fs" />
+        <Compile Include="CustomerAdmin\CustomerAdmin_Model.fs" />
+        <Compile Include="CustomerAdmin\CustomerAdmin_Update.fs" />
+        <Compile Include="CustomerAdmin\CustomerAdmin_View.fs" />
+        <Compile Include="ToDoList\ToDo_Model.fs" />
+        <Compile Include="ToDoList\ToDo_Update.fs" />
+        <Compile Include="ToDoList\ToDo_View.fs" />
+        <Compile Include="Root\Root_Model.fs" />
+        <Compile Include="Root\Root_Behavior.fs" />
+        <Compile Include="Root\Root_View.fs" />
+        <None Include="postcss.config.js" />
+        <None Include="tailwind.config.js" />
+        <None Include="index.html" />
+        <None Include="paket.references" />
+        <Compile Include="App.fs" />
+        <None Include="vite.config.mts" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Shared\Shared.fsproj" />
+    </ItemGroup>
+    <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
