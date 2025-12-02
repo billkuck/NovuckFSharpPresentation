@@ -1,11 +1,11 @@
 ﻿namespace CustomerDomain
 
-// Final version: Explicit eligibility as domain concept
+// Final version: Explicit discount tiers as domain concept
 type RegisteredCustomer = { Id: string }
 
 type UnregisteredCustomer = { Id: string }
 
 type Customer =
-    | Eligible of RegisteredCustomer
+    | Standard of RegisteredCustomer
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer

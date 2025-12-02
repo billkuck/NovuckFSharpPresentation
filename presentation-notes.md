@@ -26,19 +26,19 @@
 
 **Minutes 5-7: The Setup - The Business Rule**
 - Present the scenario from Ian Russell's Essential F#:
-  - "Eligible Registered Customers get 10% discount when they spend £100 or more"
+  - "Standard Tier Registered Customers get 10% discount when they spend £100 or more"
 - Show the naive C# approach:
   ```csharp
   class Customer {
     public string Id;
-    public bool IsEligible;
+    public bool IsStandard;
     public bool IsRegistered;
   }
   ```
 - Point out the problems:
-  - ❌ Can be `IsEligible = true` but `IsRegistered = false` (illegal state!)
+  - ❌ Can be `IsStandard = true` but `IsRegistered = false` (illegal state!)
   - ❌ Nothing prevents this invalid combination
-  - ❌ Easy to forget to check `IsRegistered` before checking `IsEligible`
+  - ❌ Easy to forget to check `IsRegistered` before checking `IsStandard`
 
 **Minutes 7-10: F# Type System Overview**
 - Quickly introduce key concepts (don't deep dive yet):
@@ -50,7 +50,7 @@
   ```fsharp
   type Customer = {
     Id: string
-    IsEligible: bool
+    IsStandard: bool
     IsRegistered: bool
   }
   ```
@@ -62,7 +62,7 @@
   ```fsharp
   type RegisteredCustomer = {
     Id: string
-    IsEligible: bool
+    IsStandard: bool
   }
   
   type UnregisteredCustomer = {
@@ -73,7 +73,7 @@
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer
   ```
-- "Notice: Can't be Eligible without being Registered!"
+- "Notice: Can't be Standard tier without being Registered!"
 - "The type itself encodes the business rules"
 
 ---
@@ -90,7 +90,7 @@
   ```fsharp
   type Customer = {
     Id: string
-    IsEligible: bool
+    IsStandard: bool
     IsRegistered: bool
   }
   ```
@@ -99,7 +99,7 @@
   // C# business logic
   static decimal CalculateTotal(Customer customer, decimal spend)
   {
-      var discount = (customer.IsEligible && customer.IsRegistered && spend >= 100.0m)
+      var discount = (customer.IsStandard && customer.IsRegistered && spend >= 100.0m)
           ? spend * 0.1m
           : 0.0m;
       return spend - discount;
@@ -107,7 +107,7 @@
   
   var customer = new Customer {
     Id = "John",
-    IsEligible = true,
+    IsStandard = true,
     IsRegistered = true
   };
   
@@ -116,7 +116,7 @@
   // But nothing stops this illegal state:
   var badCustomer = new Customer {
     Id = "Bad",
-    IsEligible = true,    // Eligible...
+    IsStandard = true,    // Standard tier...
     IsRegistered = false  // ...but NOT registered! ❌
   };
   ```
@@ -130,7 +130,7 @@
   ```fsharp
   type RegisteredCustomer = {
     Id: string
-    IsEligible: bool
+    IsStandard: bool
   }
   
   type UnregisteredCustomer = {
@@ -148,7 +148,7 @@
   {
       var discount = customer switch
       {
-          Registered c when c.Item.IsEligible && spend >= 100.0m => spend * 0.1m,
+          Registered c when c.Item.IsStandard && spend >= 100.0m => spend * 0.1m,
           _ => 0.0m
       };
       return spend - discount;
@@ -156,7 +156,7 @@
   
   // Now we have to pick a case - can't be both!
   var john = Customer.NewRegistered(
-    new RegisteredCustomer { Id = "John", IsEligible = true }
+    new RegisteredCustomer { Id = "John", IsStandard = true }
   );
   
   var sarah = Customer.NewGuest(
@@ -166,18 +166,18 @@
   var johnTotal = CalculateTotal(john, 100.0m);
   // johnTotal = 90.0m
   
-  // Can't create an eligible guest anymore - 
-  // UnregisteredCustomer doesn't have IsEligible!
+  // Can't create a standard tier guest anymore - 
+  // UnregisteredCustomer doesn't have IsStandard!
   // var bad = Customer.NewGuest(
-  //   new UnregisteredCustomer { Id = "Bad", IsEligible = true }  // ❌ Doesn't compile!
+  //   new UnregisteredCustomer { Id = "Bad", IsStandard = true }  // ❌ Doesn't compile!
   // );
   ```
-- "Now you literally cannot create an Eligible Guest - in F# OR C#!"
+- "Now you literally cannot create a Standard tier Guest - in F# OR C#!"
 - "Notice: C# switch expression works perfectly with F# discriminated union!"
 
-**Minutes 18-21: Iteration 2 - Make Eligibility Explicit**
-- Partner A: "But IsEligible is still just a boolean flag..."
-- Partner B: "Yes, and we can make eligibility a real domain concept!"
+**Minutes 18-21: Iteration 2 - Make Discount Tiers Explicit**
+- Partner A: "But IsStandard is still just a boolean flag..."
+- Partner B: "Yes, and we can make discount tiers a real domain concept!"
 - **Left (F#)**: Refactor to (from Ian Russell part3.fsx):
   ```fsharp
   type RegisteredCustomer = {
@@ -189,7 +189,7 @@
   }
   
   type Customer =
-    | Eligible of RegisteredCustomer
+    | Standard of RegisteredCustomer
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer
   ```
@@ -200,18 +200,18 @@
   {
       var discount = customer switch
       {
-          Customer.Eligible _ when spend >= 100.0m => spend * 0.1m,
+          Customer.Standard _ when spend >= 100.0m => spend * 0.1m,
           _ => 0.0m
       };
       return spend - discount;
   }
   
   // The type TELLS you what kind of customer this is
-  var john = Customer.NewEligible(
+  var john = Customer.NewStandard(
     new RegisteredCustomer("John")
   );
   
-  var mary = Customer.NewEligible(
+  var mary = Customer.NewStandard(
     new RegisteredCustomer("Mary")
   );
   
@@ -228,13 +228,13 @@
   // 90.0m - gets discount
   
   var richardTotal = CalculateTotal(richard, 100.0m);
-  // 100.0m - no discount (not eligible)
+  // 100.0m - no discount (not standard tier)
   ```
 - Show the benefits:
   - No more boolean flag to check or forget
-  - Domain language is explicit: "Eligible", "Registered", "Guest"
+  - Domain language is explicit: "Standard", "Registered", "Guest"
   - Impossible states are... impossible!
-  - C# switch expression is cleaner - only checks for Eligible!
+  - C# switch expression is cleaner - only checks for Standard tier!
 
 **Minutes 21-25: Test All Cases Side-by-Side**
 - **Left (F#)**: Show the types on display:
@@ -243,7 +243,7 @@
   type UnregisteredCustomer = { Id: string }
   
   type Customer =
-    | Eligible of RegisteredCustomer
+    | Standard of RegisteredCustomer
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer
   ```
@@ -253,14 +253,14 @@
   {
       var discount = customer switch
       {
-          Customer.Eligible _ when spend >= 100.0m => spend * 0.1m,
+          Customer.Standard _ when spend >= 100.0m => spend * 0.1m,
           _ => 0.0m
       };
       return spend - discount;
   }
   
-  var john = Customer.NewEligible(new RegisteredCustomer("John"));
-  var mary = Customer.NewEligible(new RegisteredCustomer("Mary"));
+  var john = Customer.NewStandard(new RegisteredCustomer("John"));
+  var mary = Customer.NewStandard(new RegisteredCustomer("Mary"));
   var richard = Customer.NewRegistered(new RegisteredCustomer("Richard"));
   var sarah = Customer.NewGuest(new UnregisteredCustomer("Sarah"));
   
@@ -273,7 +273,7 @@
 
 **Minutes 25-28: Benefits Discussion**
 - Quickly enumerate what we've achieved:
-  - ✅ Can't create an Eligible customer who isn't Registered (impossible in both languages!)
+  - ✅ Can't create a Standard tier customer who isn't Registered (impossible in both languages!)
   - ✅ Can't forget to check registration status (type enforces it)
   - ✅ Logic is simpler and clearer in both F# and C#
   - ✅ Domain language is explicit in the code
@@ -285,7 +285,7 @@
 - **Left (F#)**: Add a new customer type to the DU:
   ```fsharp
   type Customer =
-    | Eligible of RegisteredCustomer
+    | Standard of RegisteredCustomer
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer
     | VIP of RegisteredCustomer  // NEW!
@@ -296,7 +296,7 @@
   {
       var discount = customer switch
       {
-          Customer.Eligible _ when spend >= 100.0m => spend * 0.1m,
+          Customer.Standard _ when spend >= 100.0m => spend * 0.1m,
           _ => 0.0m
           // ⚠️ Warning: VIP case will fall through to default!
       };
@@ -306,7 +306,7 @@
   // Also show any other switch expressions that need updating:
   string GetCustomerType(Customer customer) => customer switch
   {
-      Customer.Eligible c => $"Eligible: {c.Item.Id}",
+      Customer.Standard c => $"Standard: {c.Item.Id}",
       Customer.Registered c => $"Regular: {c.Item.Id}",
       Customer.Guest c => $"Guest: {c.Item.Id}",
       // ❌ Warning: Customer.VIP not handled!
@@ -333,7 +333,7 @@
   type UnregisteredCustomer = { Id: string }
   
   type Customer =
-    | Eligible of RegisteredCustomer
+    | Standard of RegisteredCustomer
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer
   ```
@@ -348,14 +348,14 @@
   {
       var discount = customer switch
       {
-          Customer.Eligible _ when spend >= 100.0m => spend * 0.1m,
+          Customer.Standard _ when spend >= 100.0m => spend * 0.1m,
           _ => 0.0m
       };
       return spend - discount;
   }
   
   // Creating customers - constructors are generated automatically
-  var john = NewEligible(new RegisteredCustomer("John"));
+  var john = NewStandard(new RegisteredCustomer("John"));
   var sarah = NewGuest(new UnregisteredCustomer("Sarah"));
   
   var total = CalculateTotal(john, 100.0m);  // £90.00
@@ -368,7 +368,7 @@
   // Pattern matching over F# discriminated unions - example 1
   string GetCustomerType(Customer customer) => customer switch
   {
-    Customer.Eligible c => $"VIP Customer: {c.Item.Id}",
+    Customer.Standard c => $"Standard Tier: {c.Item.Id}",
     Customer.Registered c => $"Regular Customer: {c.Item.Id}",
     Customer.Guest c => $"Guest: {c.Item.Id}",
     _ => throw new ArgumentException("Unknown customer type")
@@ -381,7 +381,7 @@
     
     return customer switch
     {
-      Customer.Eligible c => baseTotal * 0.95m,  // Extra 5% off for eligible
+      Customer.Standard c => baseTotal * 0.95m,  // Extra 5% off for standard tier
       _ => baseTotal
     };
   }
@@ -399,8 +399,8 @@
   // Optional: Create a C#-friendly facade
   public static class CustomerService
   {
-    public static Customer CreateEligible(string id) =>
-      Customer.NewEligible(new RegisteredCustomer(id));
+    public static Customer CreateStandard(string id) =>
+      Customer.NewStandard(new RegisteredCustomer(id));
     
     public static Customer CreateRegistered(string id) =>
       Customer.NewRegistered(new RegisteredCustomer(id));
@@ -412,19 +412,19 @@
     {
       var discount = customer switch
       {
-        Customer.Eligible _ when spend >= 100.0m => spend * 0.1m,
+        Customer.Standard _ when spend >= 100.0m => spend * 0.1m,
         _ => 0.0m
       };
       return spend - discount;
     }
     
     // Can also add C#-style extension methods
-    public static bool IsEligible(this Customer customer) =>
-      customer.IsEligible;
+    public static bool IsStandardTier(this Customer customer) =>
+      customer.IsStandard;
     
     public static string GetId(this Customer customer) => customer switch
     {
-      Customer.Eligible c => c.Item.Id,
+      Customer.Standard c => c.Item.Id,
       Customer.Registered c => c.Item.Id,
       Customer.Guest c => c.Item.Id,
       _ => throw new ArgumentException()
@@ -432,7 +432,7 @@
   }
   
   // Usage becomes more C#-idiomatic
-  var customer = CustomerService.CreateEligible("John");
+  var customer = CustomerService.CreateStandard("John");
   var total = CustomerService.CalculateTotal(customer, 100m);
   var id = customer.GetId();
   ```
@@ -481,7 +481,7 @@
   ```fsharp
   type Msg =
     | IdChanged of string
-    | MakeEligible
+    | MakeStandard
     | MakeRegistered
     | MakeGuest
     | CustomerLoaded of Customer
@@ -492,8 +492,8 @@
     match msg with
     | IdChanged newId ->
       { model with CustomerId = newId }, Cmd.none
-    | MakeEligible ->
-      let customer = Eligible { Id = model.CustomerId }
+    | MakeStandard ->
+      let customer = Standard { Id = model.CustomerId }
       { model with CustomerType = Some customer }, Cmd.none
     | MakeRegistered ->
       let customer = Registered { Id = model.CustomerId }
@@ -510,19 +510,19 @@
         Placeholder "Customer ID"
         OnChange (fun e -> dispatch (IdChanged e.Value)) 
       ]
-      button [ OnClick (fun _ -> dispatch MakeEligible) ] [ str "Make Eligible" ]
+      button [ OnClick (fun _ -> dispatch MakeStandard) ] [ str "Make Standard" ]
       button [ OnClick (fun _ -> dispatch MakeRegistered) ] [ str "Make Registered" ]
       button [ OnClick (fun _ -> dispatch MakeGuest) ] [ str "Make Guest" ]
       
       // Display current customer
       match model.CustomerType with
-      | Some (Eligible c) -> p [] [ str $"Eligible: {c.Id}" ]
+      | Some (Standard c) -> p [] [ str $"Standard: {c.Id}" ]
       | Some (Registered c) -> p [] [ str $"Registered: {c.Id}" ]
       | Some (Guest c) -> p [] [ str $"Guest: {c.Id}" ]
       | None -> p [] [ str "No customer selected" ]
     ]
   ```
-- Walk through one complete cycle: User clicks "Make Eligible" → Msg → Update → new Model → View
+- Walk through one complete cycle: User clicks "Make Standard" → Msg → Update → new Model → View
 
 **Minutes 51-54: MVU Benefits**
 - "Everything is predictable and testable"
