@@ -1,5 +1,8 @@
 ﻿namespace CustomerLiveDomain
 
-module Say =
-    let hello name =
-        printfn "Hello %s" name
+// Naive approach with booleans - allows illegal states
+type Customer = {
+    Id: string
+    IsEligible: bool
+    IsRegistered: bool
+}
