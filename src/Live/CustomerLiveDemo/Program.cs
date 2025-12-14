@@ -16,32 +16,35 @@ class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("=== Customer Discount System - Naive Approach ===\n");
+        Console.WriteLine("=== Customer Discount System - First Discriminated Union ===\n");
 
-        // Valid customers
-        var john = new Customer("John", true, true);
-        var mary = new Customer("Mary", true, true);
-        var richard = new Customer("Richard", false, true);
-        var sarah = new Customer("Sarah", false, false);
+        // Valid customers - now using discriminated union
+        var john = Customer.NewRegistered(new RegisteredCustomer("John", true));
+        var mary = Customer.NewRegistered(new RegisteredCustomer("Mary", true));
+        var richard = Customer.NewRegistered(new RegisteredCustomer("Richard", false));
+        var sarah = Customer.NewGuest(new UnregisteredCustomer("Sarah"));
         
-        // ILLEGAL STATE - but compiler allows it!
-        var grinch = new Customer("Grinch", true, false);
+        // ILLEGAL STATE is now impossible to create!
+        // Cannot create: Customer.NewGuest with IsEligible = true
 
         Console.WriteLine($"John (Eligible+Registered, £100): £{CalculateTotal(john, 100):F2}");
         Console.WriteLine($"Mary (Eligible+Registered, £99): £{CalculateTotal(mary, 99):F2}");
         Console.WriteLine($"Richard (Registered only, £100): £{CalculateTotal(richard, 100):F2}");
         Console.WriteLine($"Sarah (Guest, £100): £{CalculateTotal(sarah, 100):F2}");
-        Console.WriteLine($"Grinch (ILLEGAL STATE, £100): £{CalculateTotal(grinch, 100):F2}");
         
-        Console.WriteLine("\n--- Problem: Grinch is Eligible but not Registered! ---");
-        Console.WriteLine("The type system doesn't prevent this illegal state.\n");
+        Console.WriteLine("\n--- Solution: Type system prevents illegal states! ---");
+        Console.WriteLine("UnregisteredCustomer doesn't even have an IsEligible field.\n");
     }
 
     static decimal CalculateTotal(Customer customer, decimal spend)
     {
-        if (customer.IsEligible && customer.IsRegistered && spend >= 100)
+        if (customer.IsRegistered)
         {
-            return spend * 0.9m;  // 10% discount
+            var registered = (customer as Customer.Registered).Item;
+            if (registered.IsEligible && spend >= 100)
+            {
+                return spend * 0.9m;  // 10% discount
+            }
         }
         return spend;
     }

@@ -1,8 +1,15 @@
 ﻿namespace CustomerLiveDomain
 
-// Naive approach with booleans - allows illegal states
-type Customer = {
+// First discriminated union - makes registration explicit
+type RegisteredCustomer = {
     Id: string
     IsEligible: bool
-    IsRegistered: bool
 }
+
+type UnregisteredCustomer = {
+    Id: string
+}
+
+type Customer =
+    | Registered of RegisteredCustomer
+    | Guest of UnregisteredCustomer
