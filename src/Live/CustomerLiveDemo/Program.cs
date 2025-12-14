@@ -16,38 +16,29 @@ class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("=== Customer Discount System - Pattern Matching ===\n");
+        Console.WriteLine("=== Customer Discount System - Final Version ===\n");
 
-        // Valid customers - now using discriminated union
-        var john = Customer.NewRegistered(new RegisteredCustomer("John", true));
-        var mary = Customer.NewRegistered(new RegisteredCustomer("Mary", true));
-        var richard = Customer.NewRegistered(new RegisteredCustomer("Richard", false));
+        // Customers with explicit eligibility in the type
+        var john = Customer.NewEligible(new RegisteredCustomer("John"));
+        var mary = Customer.NewEligible(new RegisteredCustomer("Mary"));
+        var richard = Customer.NewRegistered(new RegisteredCustomer("Richard"));
         var sarah = Customer.NewGuest(new UnregisteredCustomer("Sarah"));
 
-        Console.WriteLine("--- C# Pattern Matching (if statements) ---");
-        Console.WriteLine($"John (Eligible+Registered, £100): £{CalculateTotalCSharp(john, 100):F2}");
-        Console.WriteLine($"Mary (Eligible+Registered, £99): £{CalculateTotalCSharp(mary, 99):F2}");
-        Console.WriteLine($"Richard (Registered only, £100): £{CalculateTotalCSharp(richard, 100):F2}");
-        Console.WriteLine($"Sarah (Guest, £100): £{CalculateTotalCSharp(sarah, 100):F2}");
+        Console.WriteLine($"John (Eligible, £100): £{CalculateTotal(john, 100):F2}");
+        Console.WriteLine($"Mary (Eligible, £99): £{CalculateTotal(mary, 99):F2}");
+        Console.WriteLine($"Richard (Registered, £100): £{CalculateTotal(richard, 100):F2}");
+        Console.WriteLine($"Sarah (Guest, £100): £{CalculateTotal(sarah, 100):F2}");
         
-        Console.WriteLine("\n--- F# Pattern Matching (match expression) ---");
-        Console.WriteLine($"John (Eligible+Registered, £100): £{CustomerOperations.calculateTotal(john, 100):F2}");
-        Console.WriteLine($"Mary (Eligible+Registered, £99): £{CustomerOperations.calculateTotal(mary, 99):F2}");
-        Console.WriteLine($"Richard (Registered only, £100): £{CustomerOperations.calculateTotal(richard, 100):F2}");
-        Console.WriteLine($"Sarah (Guest, £100): £{CustomerOperations.calculateTotal(sarah, 100):F2}");
-        
-        Console.WriteLine("\n--- Both approaches produce identical results! ---\n");
+        Console.WriteLine("\n--- Journey Complete! ---");
+        Console.WriteLine("Eligibility is now explicit in the type.");
+        Console.WriteLine("No booleans to check. No illegal states possible.\n");
     }
 
-    static decimal CalculateTotalCSharp(Customer customer, decimal spend)
+    static decimal CalculateTotal(Customer customer, decimal spend)
     {
-        if (customer.IsRegistered)
+        if (customer.IsEligible && spend >= 100)
         {
-            var registered = (customer as Customer.Registered).Item;
-            if (registered.IsEligible && spend >= 100)
-            {
-                return spend * 0.9m;  // 10% discount
-            }
+            return spend * 0.9m;  // 10% discount
         }
         return spend;
     }

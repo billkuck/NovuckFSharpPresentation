@@ -1,9 +1,8 @@
 ﻿namespace CustomerLiveDomain
 
-// First discriminated union - makes registration explicit
+// Final version - eligibility is explicit in the type
 type RegisteredCustomer = {
     Id: string
-    IsEligible: bool
 }
 
 type UnregisteredCustomer = {
@@ -11,6 +10,7 @@ type UnregisteredCustomer = {
 }
 
 type Customer =
+    | Eligible of RegisteredCustomer
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer
 
@@ -19,6 +19,6 @@ module CustomerOperations =
     let calculateTotal (customer: Customer) (spend: decimal) =
         let discount =
             match customer with
-            | Registered c when c.IsEligible && spend >= 100m -> spend * 0.1m
+            | Eligible _ when spend >= 100m -> spend * 0.1m
             | _ -> 0.0m
         spend - discount
