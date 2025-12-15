@@ -1,8 +1,14 @@
 ﻿namespace CustomerLiveDomain
 
-// Naive F# record - same problem as C# class
-type Customer = {
+type RegisteredCustomer = { 
     Id: string
-    IsEligible: bool // Eligible for discount
-    IsRegistered: bool
+    IsEligible: bool 
 }
+
+type UnregisteredCustomer = { 
+    Id: string 
+}
+
+type Customer = 
+    | Registered of RegisteredCustomer
+    | Guest of UnregisteredCustomer
