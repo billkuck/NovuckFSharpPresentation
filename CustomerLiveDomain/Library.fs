@@ -2,7 +2,6 @@
 
 type RegisteredCustomer = { 
     Id: string
-    IsEligible: bool 
 }
 
 type UnregisteredCustomer = { 
@@ -10,5 +9,6 @@ type UnregisteredCustomer = {
 }
 
 type Customer = 
-    | Registered of RegisteredCustomer
+    | Standard of RegisteredCustomer    // Eligible tier explicit
+    | Registered of RegisteredCustomer  // Registered but not eligible
     | Guest of UnregisteredCustomer
