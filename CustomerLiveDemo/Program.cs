@@ -60,11 +60,37 @@ class Program
     
     static decimal CalculateTotal(Customer customer, decimal spend)
     {
+        // Current: Linear approach (compatible with .NET Framework)
+        if (customer.IsRegistered)
+        {
+            var registered = customer as Customer.Registered;
+            if (registered.Item.IsEligible && spend >= 100)
+                return spend * 0.9m;
+        }
+        return spend;
+        
+        // Stage 1 correct version (for reference - commented out)
+        /*
+        if (customer.IsEligible && customer.IsRegistered && spend >= 100)
+            return spend * 0.9m;
+        return spend;
+        */
+        
+        // Stage 1 buggy version - forgot to check IsRegistered (for reference - commented out)
+        /*
+        if (customer.IsEligible && spend >= 100)
+            return spend * 0.9m;
+        return spend;
+        */
+        
+        // Alternative: C# 8.0+ switch expression ("cleaner" but requires modern C#)
+        /*
         var discount = customer switch
         {
             Registered c when c.Item.IsEligible && spend >= 100 => spend * 0.1m,
             _ => 0m
         };
         return spend - discount;
+        */
     }
 }
