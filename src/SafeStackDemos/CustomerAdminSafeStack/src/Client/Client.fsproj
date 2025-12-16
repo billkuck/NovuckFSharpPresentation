@@ -19,7 +19,6 @@
         <Compile Include="Root\Root_Model.fs" />
         <Compile Include="Root\Root_Behavior.fs" />
         <Compile Include="Root\Root_View.fs" />
-        <None Include="postcss.config.js" />
         <None Include="tailwind.config.js" />
         <None Include="index.html" />
         <None Include="paket.references" />
@@ -28,6 +27,9 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Shared\Shared.fsproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Feliz.DaisyUI" Version="5.2.0" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

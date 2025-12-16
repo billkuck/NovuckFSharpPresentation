@@ -50,11 +50,12 @@ type AdtWidget =
         (label: string)
         (clickHandler: Browser.Types.MouseEvent -> unit) 
         =
-        Daisy.button.button [
-            button.outline
-            prop.text label
-            button.xs
-            prop.onClick clickHandler
+        Html.div [
+            Daisy.button.button [
+                button.primary
+                prop.text label
+                prop.onClick clickHandler
+            ]
         ]
 
     static member adtTable<'T>
