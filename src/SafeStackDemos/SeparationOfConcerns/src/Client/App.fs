@@ -3,6 +3,7 @@ module App
 open Elmish
 open Elmish.React
 open ToDo_Update
+open Root_Behavior
 
 open Fable.Core.JsInterop
 
@@ -12,7 +13,7 @@ importSideEffects "./index.css"
 open Elmish.HMR
 #endif
 
-Program.mkProgram ToDo_Update.init ToDo_Update.update ToDo_View.view
+Program.mkProgram Root_Behavior.init Root_Behavior.update Root_View.view
 #if DEBUG
 |> Program.withConsoleTrace
 #endif
