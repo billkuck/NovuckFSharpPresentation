@@ -1,0 +1,26 @@
+{
+    "private": true,
+    "engines": {
+        "node": "~18 || ~20 || ~22",
+        "npm": "~9 || ~10"
+    },
+    "scripts": {},
+    "dependencies": {
+        "@tailwindcss/vite": "^4.1.18",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+        "@tailwindcss/postcss": "^4.1.18",
+        "@tailwindcss/typography": "^0.5.19",
+        "@types/node": "^20.9.1",
+        "@vitejs/plugin-react": "^4.2.0",
+        "autoprefixer": "^10.4.22",
+        "daisyui": "^5.5.14",
+        "mocha": "^10.6.0",
+        "postcss": "^8.5.6",
+        "sass": "^1.69.5",
+        "tailwindcss": "^4.1.18",
+        "vite": "^5.4.19"
+    }
+}
