@@ -2,7 +2,6 @@ module App
 
 open Elmish
 open Elmish.React
-open ToDo_Update
 open Root_Behavior
 
 open Fable.Core.JsInterop

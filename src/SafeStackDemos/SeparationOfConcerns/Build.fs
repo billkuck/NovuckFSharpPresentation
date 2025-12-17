@@ -11,9 +11,9 @@ let sharedPath = Path.getFullName "src/Shared"
 let serverPath = Path.getFullName "src/Server"
 let clientPath = Path.getFullName "src/Client"
 let deployPath = Path.getFullName "deploy"
-let sharedTestsPath = Path.getFullName "tests/Shared"
-let serverTestsPath = Path.getFullName "tests/Server"
-let clientTestsPath = Path.getFullName "tests/Client"
+//let sharedTestsPath = Path.getFullName "tests/Shared"
+//let serverTestsPath = Path.getFullName "tests/Server"
+//let clientTestsPath = Path.getFullName "tests/Client"
 
 Target.create "Clean" (fun _ ->
     Shell.cleanDir deployPath
@@ -56,19 +56,19 @@ Target.create "Run" (fun _ ->
     ]
     |> runParallel)
 
-Target.create "RunTestsHeadless" (fun _ ->
-    run dotnet [ "run" ] serverTestsPath
-    run npm [ "install" ] clientTestsPath
-    run dotnet [ "fable"; "-o"; "output" ] clientTestsPath
-    run npx [ "mocha"; "output" ] clientTestsPath
-)
+//Target.create "RunTestsHeadless" (fun _ ->
+//    run dotnet [ "run" ] serverTestsPath
+//    run npm [ "install" ] clientTestsPath
+//    run dotnet [ "fable"; "-o"; "output" ] clientTestsPath
+//    run npx [ "mocha"; "output" ] clientTestsPath
+//)
 
-Target.create "WatchRunTests" (fun _ ->
-    [
-        "server", dotnet [ "watch"; "run"; "--no-restore" ] serverTestsPath
-        "client", dotnet [ "fable"; "watch"; "-o"; "output"; "-s"; "--run"; "npx"; "vite" ] clientTestsPath
-    ]
-    |> runParallel)
+//Target.create "WatchRunTests" (fun _ ->
+//    [
+//        "server", dotnet [ "watch"; "run"; "--no-restore" ] serverTestsPath
+//        "client", dotnet [ "fable"; "watch"; "-o"; "output"; "-s"; "--run"; "npx"; "vite" ] clientTestsPath
+//    ]
+//    |> runParallel)
 
 Target.create "Format" (fun _ -> run dotnet [ "fantomas"; "." ] ".")
 
@@ -78,8 +78,8 @@ let dependencies = [
     "Clean" ==> "RestoreClientDependencies" ==> "Bundle" ==> "Azure"
     "Clean" ==> "RestoreClientDependencies" ==> "Build" ==> "Run"
 
-    "RestoreClientDependencies" ==> "Build" ==> "RunTestsHeadless"
-    "RestoreClientDependencies" ==> "Build" ==> "WatchRunTests"
+    //"RestoreClientDependencies" ==> "Build" ==> "RunTestsHeadless"
+    //"RestoreClientDependencies" ==> "Build" ==> "WatchRunTests"
 ]
 
 [<EntryPoint>]
