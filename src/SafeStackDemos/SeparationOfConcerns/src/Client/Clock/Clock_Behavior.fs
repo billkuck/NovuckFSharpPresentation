@@ -15,7 +15,7 @@ let init () =
     {
         running = false;
         currentTime = DateTime.MinValue
-        updateFrequencyInSeconds = 5 |> Seconds
+        updateFrequencyInSeconds = 1 |> Seconds
     }, Cmd.ofMsg Start
 
 let update
