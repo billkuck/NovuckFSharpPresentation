@@ -1,4 +1,4 @@
-module AdtWidgets
+module NkWidgets
 
 open Feliz
 open Feliz.DaisyUI
@@ -9,7 +9,7 @@ type AdtTab = {
     Active: bool
 }
 
-type AdtWidget =
+type NkWidget =
 
     static member text
         (content : string)
@@ -25,26 +25,26 @@ type AdtWidget =
         (content : string option)
         =
         if content.IsSome then
-            AdtWidget.text content.Value
+            NkWidget.text content.Value
         else
-            AdtWidget.text ""
+            NkWidget.text ""
 
     static member text
         (content : int option)
         =
         if content.IsSome then
-            AdtWidget.text content.Value
+            NkWidget.text content.Value
         else
-            AdtWidget.text ""
+            NkWidget.text ""
 
      static member text
         (content : unit -> string)
         =
         Html.text (content())
 
-    static member h1 (content : string) =  Html.h1 [ prop.className (AdtStyles.Styles.headingByLevel 1); prop.text content ]
-    static member h2 (content : string) =  Html.h2 [ prop.className (AdtStyles.Styles.headingByLevel 2); prop.text content ]
-    static member h3 (content : string) =  Html.h3 [ prop.className (AdtStyles.Styles.headingByLevel 3); prop.text content ]
+    static member h1 (content : string) =  Html.h1 [ prop.className (NkStyles.Styles.headingByLevel 1); prop.text content ]
+    static member h2 (content : string) =  Html.h2 [ prop.className (NkStyles.Styles.headingByLevel 2); prop.text content ]
+    static member h3 (content : string) =  Html.h3 [ prop.className (NkStyles.Styles.headingByLevel 3); prop.text content ]
 
     static member button
         (label: string)
@@ -57,7 +57,7 @@ type AdtWidget =
             prop.onClick clickHandler
         ]
 
-    static member adtTable<'T>
+    static member nkTable<'T>
         (items: 'T list)
         (headings: string list)
         (renderItemRow: 'T -> Fable.React.ReactElement list)
@@ -72,13 +72,13 @@ type AdtWidget =
                     Html.tr (List.map (fun (columnContent: Fable.React.ReactElement) -> (Html.td columnContent)) (renderItemRow item))
         ]]]
 
-    static member adtActionsContainer
+    static member nkActionsContainer
         (contents : Fable.React.ReactElement list)
         =
         Daisy.cardActions 
             contents
 
-    static member adtContainer
+    static member nkContainer
         (title: string)
         (content: Fable.React.ReactElement list)
         =
@@ -187,7 +187,7 @@ type AdtWidget =
                     prop.text title
                 ]
                 Daisy.collapseContent [
-                    AdtWidget.h1 title
+                    NkWidget.h1 title
                     (renderContent ())
                 ]
             ]
@@ -201,7 +201,7 @@ type AdtWidget =
         let Equal first second : bool =
             first = second
 
-        AdtWidget.optionalContent allThemeNames (fun (allThemeNames) ->
+        NkWidget.optionalContent allThemeNames (fun (allThemeNames) ->
             Html.span [
                 prop.onChange (onChangeMethod)
                 prop.children [

@@ -18,6 +18,24 @@ type Customer =
     | Registered of RegisteredCustomer
     | Guest of UnregisteredCustomer
 
+// API Contract
+type CustomerDto = {
+    Id: string
+    Name: string
+    Tier: string  // "VIP", "Standard", "Registered", "Guest"
+}
+
+module Route =
+    let builder typeName methodName =
+        sprintf "/api/%s/%s" typeName methodName
+
+type ICustomerApi = {
+    getCustomers : unit -> Async<CustomerDto list>
+    changeTier : string -> string -> Async<CustomerDto>
+}
+
+
+
 module Customer =
     // Idiomatic F# - extract common data from DU cases
     let getId = function
@@ -84,19 +102,12 @@ module Customer =
         | Unregister, Registered c -> Guest { Id = c.Id; Name = c.Name }
         | _ -> customer  // No change if invalid
 
-// API Contract
-type CustomerDto = {
-    Id: string
-    Name: string
-    Tier: string  // "VIP", "Standard", "Registered", "Guest"
-}
 
-module Route =
-    let builder typeName methodName =
-        sprintf "/api/%s/%s" typeName methodName
-
-type ICustomerApi = {
-    getCustomers : unit -> Async<CustomerDto list>
-    changeTier : string -> string -> Async<CustomerDto>
-}
-
+    // Helper to convert DTO to domain Customer
+    let dtoToCustomer (dto: CustomerDto) : Customer =
+        match dto.Tier with
+        | "VIP" -> VIP { Id = dto.Id; Name = dto.Name }
+        | "Standard" -> Standard { Id = dto.Id; Name = dto.Name }
+        | "Registered" -> Registered { Id = dto.Id; Name = dto.Name }
+        | "Guest" -> Guest { Id = dto.Id; Name = dto.Name }
+        | _ -> Guest { Id = dto.Id; Name = dto.Name }

@@ -5,8 +5,8 @@
         <DefineConstants>FABLE_COMPILER</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Include="AdtStyles.fs" />
-        <Compile Include="AdtWidgets.fs" />
+        <Compile Include="NkStyles.fs" />
+        <Compile Include="NkWidgets.fs" />
         <Compile Include="CustomerAdmin\CustomerAdmin_Model.fs" />
         <Compile Include="CustomerAdmin\CustomerAdmin_Behavior.fs" />
         <Compile Include="CustomerAdmin\CustomerAdmin_View.fs" />

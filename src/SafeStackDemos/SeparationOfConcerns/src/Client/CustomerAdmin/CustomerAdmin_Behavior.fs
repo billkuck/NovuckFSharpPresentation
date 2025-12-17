@@ -1,20 +1,14 @@
 module CustomerAdmin_Behavior
 
 open CustomerAdmin_Model
+
 open Elmish
 open SAFE
 open Shared
+open Shared.Customer
 
 let customerApi = Api.makeProxy<ICustomerApi> ()
 
-// Helper to convert DTO to domain Customer
-let dtoToCustomer (dto: CustomerDto) : Customer =
-    match dto.Tier with
-    | "VIP" -> VIP { Id = dto.Id; Name = dto.Name }
-    | "Standard" -> Standard { Id = dto.Id; Name = dto.Name }
-    | "Registered" -> Registered { Id = dto.Id; Name = dto.Name }
-    | "Guest" -> Guest { Id = dto.Id; Name = dto.Name }
-    | _ -> Guest { Id = dto.Id; Name = dto.Name }
 
 let init () =
     let initialModel = {

@@ -1,4 +1,4 @@
-module AdtStyles
+module NkStyles
 
 type Styles =
     static member headingByLevel level =
