@@ -391,5 +391,8 @@ TASK_*_PR.md
 
 # Synology deployment configs with sensitive data
 **/watchtower/config.json
+<<<<<<< HEAD
 **/.vite
 **/output
+=======
+>>>>>>> feature/presentation-creation
