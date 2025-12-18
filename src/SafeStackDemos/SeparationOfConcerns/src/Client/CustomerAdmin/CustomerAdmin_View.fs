@@ -5,6 +5,7 @@ open Shared
 open CustomerAdmin_Model
 
 module ViewComponents =
+
     let tierBadge tier =
         let (bgColor, textColor) =
             match tier with
@@ -19,61 +20,53 @@ module ViewComponents =
             prop.text tier
         ]
 
-    let actionButtons customer dispatch =
-        let customerId = Customer.getId customer
+    let buttonAttributes tierAction =
+        match tierAction with
+        | Customer.Promote -> ("⬆ Promote", "bg-green-500", "bg-green-600", "bg-gray-200")
+        | Customer.Demote -> ("⬇ Demote", "bg-orange-500", "bg-orange-600", "bg-gray-200")
+        | Customer.Register -> ("→ Register", "bg-blue-500", "bg-blue-600", "bg-gray-200")
+        | Customer.Unregister -> ("✕ Unregister", "bg-red-500", "bg-red-600", "bg-gray-200")
 
+    let buttonClass isEnabled tierAction =
+        let (label, activeColor, hoverColor, disabledColor) = buttonAttributes tierAction
+        if isEnabled then
+            $"px-3 py-1 {activeColor} hover:{hoverColor} text-white rounded text-sm font-medium"
+        else
+            $"px-3 py-1 {disabledColor} text-gray-400 rounded text-sm font-medium cursor-not-allowed opacity-50"
+
+    let actionButton customer tierAction dispatch =
+        let customerId = Customer.getId customer
+        let (label, activeColor, hoverColor, disabledColor) = buttonAttributes tierAction
+        let isEnabled = Customer.canTransition tierAction customer
+        Html.button [
+            prop.className (buttonClass isEnabled tierAction)
+            prop.disabled (not isEnabled)
+            prop.onClick (fun _ -> if isEnabled then  dispatch (ChangeCustomerTier (customerId, string tierAction)))
+            prop.text label
+        ]
+
+    let registerUnregisterButton customer dispatch =
+        if Customer.canTransition Customer.Register customer then
+            actionButton customer Customer.Register dispatch
+        elif Customer.canTransition Customer.Unregister customer then
+            actionButton customer Customer.Unregister dispatch
+        else
+            Html.div [ prop.className "px-3 py-1 min-w-[110px]" ]
+
+    let actionButtons customer dispatch =
         Html.div [
             prop.className "flex gap-2"
             prop.children [
-                // Promote button - always rendered but disabled when not available
-                Html.button [
-                    prop.className (
-                        if Customer.canTransition Customer.Promote customer then
-                            "px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-medium min-w-[90px]"
-                        else
-                            "px-3 py-1 bg-gray-200 text-gray-400 rounded text-sm font-medium min-w-[90px] cursor-not-allowed opacity-50"
-                    )
-                    prop.disabled (not (Customer.canTransition Customer.Promote customer))
-                    prop.onClick (fun _ -> 
-                        if Customer.canTransition Customer.Promote customer then
-                            dispatch (ChangeCustomerTier (customerId, "Promote")))
-                    prop.text "⬆ Promote"
-                ]
-
-                // Demote button - always rendered but disabled when not available
-                Html.button [
-                    prop.className (
-                        if Customer.canTransition Customer.Demote customer then
-                            "px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-sm font-medium min-w-[90px]"
-                        else
-                            "px-3 py-1 bg-gray-200 text-gray-400 rounded text-sm font-medium min-w-[90px] cursor-not-allowed opacity-50"
-                    )
-                    prop.disabled (not (Customer.canTransition Customer.Demote customer))
-                    prop.onClick (fun _ -> 
-                        if Customer.canTransition Customer.Demote customer then
-                            dispatch (ChangeCustomerTier (customerId, "Demote")))
-                    prop.text "⬇ Demote"
-                ]
-
-                // Register/Unregister button - changes based on customer state
-                if Customer.canTransition Customer.Register customer then
-                    Html.button [
-                        prop.className "px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium min-w-[110px]"
-                        prop.onClick (fun _ -> dispatch (ChangeCustomerTier (customerId, "Register")))
-                        prop.text "→ Register"
-                    ]
-                elif Customer.canTransition Customer.Unregister customer then
-                    Html.button [
-                        prop.className "px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm font-medium min-w-[110px]"
-                        prop.onClick (fun _ -> dispatch (ChangeCustomerTier (customerId, "Unregister")))
-                        prop.text "✕ Unregister"
-                    ]
-                else
-                    // Spacer to maintain layout consistency
-                    Html.div [
-                        prop.className "px-3 py-1 min-w-[110px]"
-                    ]
+                actionButton customer Customer.Promote dispatch
+                actionButton customer Customer.Demote dispatch
+                registerUnregisterButton customer dispatch
             ]
+        ]
+
+    let customerNameDisplay customer =
+        Html.span [
+            prop.className "text-lg font-medium text-gray-800"
+            prop.text (Customer.getName customer)
         ]
 
     let customerRow customer dispatch =
@@ -83,10 +76,7 @@ module ViewComponents =
                 Html.div [
                     prop.className "flex items-center gap-4 flex-1"
                     prop.children [
-                        Html.span [
-                            prop.className "text-lg font-medium text-gray-800 min-w-[120px]"
-                            prop.text (Customer.getName customer)
-                        ]
+                        customerNameDisplay customer
                         tierBadge (Customer.getTier customer)
                     ]
                 ]
